@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [ExecuteInEditMode]
-public class TerrainTextureIndexUpdater : MonoBehaviour
+public class TerrainMix : MonoBehaviour
 {
     Terrain terrain;
     TerrainData terrainData;
@@ -120,25 +120,34 @@ public class TerrainTextureIndexUpdater : MonoBehaviour
 
     Texture CreateNormalTextureArray() {
         Texture firstTexture = terrainData.splatPrototypes[0].normalMap;
-        RenderTexture rt = new RenderTexture(firstTexture.width, firstTexture.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
-        rt.wrapMode = TextureWrapMode.Repeat;
-        rt.useMipMap = true;
-        rt.filterMode = FilterMode.Bilinear;
-        rt.dimension = UnityEngine.Rendering.TextureDimension.Tex2DArray;
-        rt.volumeDepth = terrainData.splatPrototypes.Length;
-        rt.autoGenerateMips = true;
-        Texture2D defaultNormal = CreateTexture(new Color(0.5f, 0.5f, 1));
-
-        Material mat = new Material(Shader.Find("Hidden/BlitCopy"));
-        for (int i = 0; i < terrainData.splatPrototypes.Length; i++) {
-            Graphics.SetRenderTarget(rt, 0, CubemapFace.Unknown, i);
-            if (terrainData.splatPrototypes[i].normalMap) {
-                Graphics.Blit(terrainData.splatPrototypes[i].normalMap, mat);
-            } else {
-                Graphics.Blit(defaultNormal, mat);
+        for(int i=1; i<terrainData.splatPrototypes.Length; i++) {
+            firstTexture = terrainData.splatPrototypes[i].normalMap;
+            if (firstTexture) {
+                break;
             }
         }
-        return rt;
+        if (firstTexture) {
+            RenderTexture rt = new RenderTexture(firstTexture.width, firstTexture.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+            rt.wrapMode = TextureWrapMode.Repeat;
+            rt.useMipMap = true;
+            rt.filterMode = FilterMode.Bilinear;
+            rt.dimension = UnityEngine.Rendering.TextureDimension.Tex2DArray;
+            rt.volumeDepth = terrainData.splatPrototypes.Length;
+            rt.autoGenerateMips = true;
+            Texture2D defaultNormal = CreateTexture(new Color(0.5f, 0.5f, 1));
+
+            Material mat = new Material(Shader.Find("Hidden/CopyNormal"));
+            for (int i = 0; i < terrainData.splatPrototypes.Length; i++) {
+                Graphics.SetRenderTarget(rt, 0, CubemapFace.Unknown, i);
+                if (terrainData.splatPrototypes[i].normalMap) {
+                    Graphics.Blit(terrainData.splatPrototypes[i].normalMap, mat);
+                } else {
+                    Graphics.Blit(defaultNormal, mat);
+                }
+            }
+            return rt;
+        }
+        return null;
     }
 
     Vector4[] GetScaleOffsets(TerrainData terrainData) {

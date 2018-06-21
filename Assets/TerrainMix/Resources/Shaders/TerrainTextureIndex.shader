@@ -44,7 +44,7 @@ Shader "Mobile/TerrainTextureIndex" {
 			fixed4 col1 = UNITY_SAMPLE_TEX2DARRAY(_TexArray, float3(uv1, index1));
 			fixed4 nor1 = UNITY_SAMPLE_TEX2DARRAY(_NormalArray, float3(uv1, index1));
 		
-			float height = 0;// (1 - abs(alpha.w * 2 - 1)) * _HeightScale;
+			float height = (1 - abs(alpha.w * 2 - 1)) * _HeightScale;
 			float a = clamp(alpha.w + (-col0.a + col1.a) * height, 0, 1);
 			fixed4 col = lerp(col0, col1, a);
 			fixed4 nor = lerp(nor0, nor1, a);
@@ -52,7 +52,7 @@ Shader "Mobile/TerrainTextureIndex" {
 			fixed3 n = UnpackNormal(nor);//UnpackNormal(tex2D(_Normal, (IN.uv_Normal * 30)));// +_TerrainScaleOffset[0].zw) * _TerrainScaleOffset[0].xy));
 		
 			o.Albedo = col.rgb;
-			o.Normal = n;
+			//o.Normal = n;
 			o.Metallic = 0;
 			o.Smoothness = col.a;
 		}
